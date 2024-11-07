@@ -1,8 +1,12 @@
-let ripple_x = 0;
-let ripple_y = 0;
-let ripple_d = 0;
+let video;
+
+let bodyPose;
+
+let poses = [];
 
 let ripplers = [];
+
+let handsClose = false;
 
 class Rippler {
   constructor(x, y) {
@@ -24,12 +28,53 @@ class Rippler {
   }
 }
 
+function preload() {
+  bodyPose = ml5.bodyPose("MoveNet", {flipped: true});
+}
+
+function gotPoses(results) {
+  poses = results;
+}
+
 function setup() {
   createCanvas(800, 800);
+  video = createCapture(VIDEO, {flipped: true});
+  video.hide();
+
+  bodyPose.detectStart(video, gotPoses);
 }
 
 function draw() {
-  background(80, 80, 150);
+  image(video, 0, 0);
+
+  if (poses.length > 0) {
+    let pose = poses[0];
+
+    let rx = pose.right_wrist.x;
+    let ry = pose.right_wrist.y;
+    let lx = pose.left_wrist.x;
+    let ly = pose.left_wrist.y;
+
+    fill(255, 0, 0);
+    circle(rx, ry, 20);
+    fill(0, 255, 0);
+    circle(lx, ly, 20);
+
+    let d = dist(rx, ry, lx, ly);
+
+    if (d < 70) {
+      let x = (rx + lx) / 2;
+      let y = (ry + ly) / 2;
+      if (!handsClose) {
+        ripplers.push(new Rippler(x, y));
+        handsClose = true;
+      }
+    }
+    else {
+      handsClose = false;
+    }
+  }
+
   strokeWeight(2);
   noFill();
 
@@ -43,10 +88,7 @@ function draw() {
 }
 
 function mousePressed() {
-  ripple_x = mouseX;
-  ripple_y = mouseY;
-  ripple_d = 0;
-
+  console.log(poses);
   ripplers.push(new Rippler(mouseX, mouseY));
   console.log(ripplers);
 }
