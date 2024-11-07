@@ -37,8 +37,9 @@ function gotPoses(results) {
 }
 
 function setup() {
-  createCanvas(800, 800);
+  createCanvas(windowWidth, windowHeight);
   video = createCapture(VIDEO, {flipped: true});
+  video.size(windowWidth, windowHeight);
   video.hide();
 
   bodyPose.detectStart(video, gotPoses);
